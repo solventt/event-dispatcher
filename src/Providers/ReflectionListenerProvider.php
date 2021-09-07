@@ -1,25 +1,23 @@
 <?php
 
-namespace Slim\EventDispatcher\Providers;
+namespace Solventt\EventDispatcher\Providers;
 
 use Psr\EventDispatcher\ListenerProviderInterface;
 use ReflectionException;
-use Slim\EventDispatcher\Exceptions\NotFoundListenersException;
-use Slim\EventDispatcher\ListenerSignatureChecker;
-use Slim\EventDispatcher\SubscribingInterface;
+use Solventt\EventDispatcher\Exceptions\NotFoundListenersException;
+use Solventt\EventDispatcher\ListenerSignatureChecker;
+use Solventt\EventDispatcher\SubscribingInterface;
 use TypeError;
 
 class ReflectionListenerProvider implements ListenerProviderInterface
 {
     private iterable $listeners;
 
-    private bool $whetherToCheck = false;
-
     /**
      * Incoming array values are filtered.
-     * Given listeners are bound to events specified in its parameter's type-hint
-     * If the listener execution priority is not specified
-     * the default priority value will be assigned to it.
+     * Given listeners are bound to events specified in their parameter's type-hint
+     * If a listener execution priority is not specified
+     * a default priority value will be assigned to it.
      *
      * @param iterable $definition Contains listeners which can be given in two formats:
      *
@@ -37,6 +35,7 @@ class ReflectionListenerProvider implements ListenerProviderInterface
                 throw new TypeError('Wrong type of the listener');
             }
 
+            /** @var  callable|array{callable, int} $listener */
             if (is_array($listener) && is_callable($listener[0])) {
                 if (isset($listener[1]) && is_integer($listener[1])) {
                     [$listener, $priority] = $listener;
@@ -45,10 +44,11 @@ class ReflectionListenerProvider implements ListenerProviderInterface
                 }
             }
 
-            if (!is_callable($listener) && is_array($listener) && !is_callable($listener[0])) {
+            if (!is_callable($listener) && !is_callable($listener[0])) {
                 throw new TypeError('Wrong type of the listener');
             }
 
+            /** @var callable $listener */
             $this->add($listener, $priority);
         }
 
@@ -60,7 +60,7 @@ class ReflectionListenerProvider implements ListenerProviderInterface
     /* @inheritDoc */
     public function getListenersForEvent(object $event): iterable
     {
-        return (new ClassicListenerProvider($this->listeners, $this->whetherToCheck))->getListenersForEvent($event);
+        return (new ClassicListenerProvider($this->listeners, false))->getListenersForEvent($event);
     }
 
 
@@ -76,11 +76,9 @@ class ReflectionListenerProvider implements ListenerProviderInterface
         $checker = new ListenerSignatureChecker();
 
         $reflection = $checker->createCallableReflection($listener);
-        $eventsClasses = $checker->getEventClassName($reflection);
+        $eventClass = $checker->getEventClassName($reflection);
 
-        foreach ($eventsClasses as $eventClass) {
-            $this->listeners[$eventClass][] = [$listener, $priority];
-        }
+        $this->listeners[$eventClass][] = [$listener, $priority];
     }
 
     /**

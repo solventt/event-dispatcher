@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Slim\EventDispatcher;
+namespace Solventt\EventDispatcher;
 
 use Closure;
 use LengthException;
@@ -11,12 +11,17 @@ use ReflectionFunction;
 use ReflectionFunctionAbstract;
 use ReflectionMethod;
 use ReflectionNamedType;
-use ReflectionType;
-use ReflectionUnionType;
 use TypeError;
 
 class ListenerSignatureChecker
 {
+    private bool $whetherToCheck;
+
+    public function __construct(bool $whetherToCheck = true)
+    {
+        $this->whetherToCheck = $whetherToCheck;
+    }
+
     /**
      * @param callable $callable
      * @return ReflectionFunctionAbstract
@@ -32,18 +37,20 @@ class ListenerSignatureChecker
             return new ReflectionMethod(...$callable);
         }
 
-        if (is_object($callable)) {
-            return new ReflectionMethod($callable, '__invoke');
-        }
+        return new ReflectionMethod($callable, '__invoke');
     }
 
     /**
-     * Checks a listener signature according to PSR-14 listener requirements
+     * Checks a listener signature according to the PSR-14 listener requirements
      * @param callable $callable
      * @throws ReflectionException|LengthException|TypeError
      */
     public function check(callable $callable): void
     {
+        if (!$this->whetherToCheck) {
+            return;
+        }
+
         $reflection = $this->createCallableReflection($callable);
 
         $this->checkParametersQuantity($reflection);
@@ -77,13 +84,7 @@ class ListenerSignatureChecker
             throw new TypeError('The type of the listener callback parameter is undefined');
         }
 
-        if ($paramType instanceof ReflectionUnionType) {
-            foreach ($paramType->getTypes() as $type) {
-                $this->$method($type);
-            }
-        } else {
-            $this->$method($paramType);
-        }
+        $this->$method($paramType);
     }
 
     /**
@@ -93,7 +94,7 @@ class ListenerSignatureChecker
     private function checkParamTypeIsClassOrObject(ReflectionNamedType $paramType): void
     {
         if (!class_exists($paramType->getName()) && $paramType->getName() !== 'object') {
-            throw new TypeError('The listener parameter must has object or existent event class type');
+            throw new TypeError('The listener parameter must have an object or existent event class type');
         }
     }
 
@@ -104,7 +105,7 @@ class ListenerSignatureChecker
     private function checkParamTypeIsClass(ReflectionNamedType $paramType): void
     {
         if (!class_exists($paramType->getName())) {
-            throw new TypeError('The listener parameter must has only existent event class type');
+            throw new TypeError('The listener parameter must have a type of an existing event class');
         }
     }
 
@@ -116,17 +117,17 @@ class ListenerSignatureChecker
     {
         $returnType = $reflection->getReturnType();
 
-        if ($returnType instanceof ReflectionUnionType || $returnType->getName() !== 'void') {
-            throw new TypeError("The listener callback must have only 'void' return type");
+        if ($returnType->getName() !== 'void') {
+            throw new TypeError("The listener callback must have only a 'void' return type");
         }
     }
 
     /**
      * Gives a listener event (or events) class name
      * @param ReflectionFunctionAbstract $reflection
-     * @return array
+     * @return string
      */
-    public function getEventClassName(ReflectionFunctionAbstract $reflection): array
+    public function getEventClassName(ReflectionFunctionAbstract $reflection): string
     {
         $this->checkParametersQuantity($reflection);
         $this->checkParameterTypeHint($reflection, 'checkParamTypeIsClass');
@@ -134,16 +135,6 @@ class ListenerSignatureChecker
 
         $paramType = $reflection->getParameters()[0]->getType();
 
-        if ($paramType instanceof ReflectionUnionType) {
-            $types = [];
-
-            foreach ($paramType->getTypes() as $type) {
-                $types[] = $type->getName();
-            }
-
-            return $types;
-        } else {
-            return [$paramType->getName()];
-        }
+        return $paramType->getName();
     }
 }

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Slim\EventDispatcher\Tests\Mocks\Listeners;
+namespace Solventt\EventDispatcher\Tests\Mocks\Listeners;
 
-use Slim\EventDispatcher\Tests\Mocks\Events\FirstEvent;
-use Slim\EventDispatcher\Tests\Mocks\Events\SecondEvent;
+use Solventt\EventDispatcher\Tests\Mocks\Events\FirstEvent;
+use Solventt\EventDispatcher\Tests\Mocks\Events\SecondEvent;
 
 class ArrayCallable
 {

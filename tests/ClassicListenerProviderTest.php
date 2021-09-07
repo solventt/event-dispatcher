@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace Slim\EventDispatcher\Tests;
+namespace Solventt\EventDispatcher\Tests;
 
 use ArrayIterator;
 use Closure;
 use PHPUnit\Framework\TestCase;
 use Psr\EventDispatcher\ListenerProviderInterface;
 use ReflectionProperty;
-use Slim\EventDispatcher\Exceptions\NotFoundListenersException;
-use Slim\EventDispatcher\Providers\ClassicListenerProvider;
-use Slim\EventDispatcher\Tests\Mocks\Events\FirstEvent;
-use Slim\EventDispatcher\Tests\Mocks\Events\SecondEvent;
-use Slim\EventDispatcher\Tests\Mocks\Listeners\ArrayCallable;
-use Slim\EventDispatcher\Tests\Mocks\Listeners\InvokableClass;
+use Solventt\EventDispatcher\Exceptions\NotFoundListenersException;
+use Solventt\EventDispatcher\Providers\ClassicListenerProvider;
+use Solventt\EventDispatcher\Tests\Mocks\Events\FirstEvent;
+use Solventt\EventDispatcher\Tests\Mocks\Events\SecondEvent;
+use Solventt\EventDispatcher\Tests\Mocks\Listeners\ArrayCallable;
+use Solventt\EventDispatcher\Tests\Mocks\Listeners\InvokableClass;
 use stdClass;
 
 class ClassicListenerProviderTest extends TestCase

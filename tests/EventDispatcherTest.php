@@ -2,23 +2,23 @@
 
 declare(strict_types=1);
 
-namespace Slim\EventDispatcher\Tests;
+namespace Solventt\EventDispatcher\Tests;
 
 use BadMethodCallException;
 use DI\Container;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use ReflectionProperty;
-use Slim\EventDispatcher\EventDispatcher;
-use Slim\EventDispatcher\Exceptions\ClassNotFoundException;
-use Slim\EventDispatcher\Exceptions\NotFoundListenersException;
-use Slim\EventDispatcher\Providers\ContainerListenerProvider;
-use Slim\EventDispatcher\Providers\ClassicListenerProvider;
-use Slim\EventDispatcher\Providers\ReflectionListenerProvider;
-use Slim\EventDispatcher\Tests\Mocks\Events\FirstEvent;
-use Slim\EventDispatcher\Tests\Mocks\Events\SecondEvent;
-use Slim\EventDispatcher\Tests\Mocks\Listeners\ArrayCallable;
-use Slim\EventDispatcher\Tests\Mocks\Listeners\InvokableClass;
+use Solventt\EventDispatcher\EventDispatcher;
+use Solventt\EventDispatcher\Exceptions\ClassNotFoundException;
+use Solventt\EventDispatcher\Exceptions\NotFoundListenersException;
+use Solventt\EventDispatcher\Providers\ContainerListenerProvider;
+use Solventt\EventDispatcher\Providers\ClassicListenerProvider;
+use Solventt\EventDispatcher\Providers\ReflectionListenerProvider;
+use Solventt\EventDispatcher\Tests\Mocks\Events\FirstEvent;
+use Solventt\EventDispatcher\Tests\Mocks\Events\SecondEvent;
+use Solventt\EventDispatcher\Tests\Mocks\Listeners\ArrayCallable;
+use Solventt\EventDispatcher\Tests\Mocks\Listeners\InvokableClass;
 
 class EventDispatcherTest extends TestCase
 {
@@ -205,4 +205,13 @@ class EventDispatcherTest extends TestCase
         $dispatcher->on('NonExistentEvent', new InvokableClass());
     }
 
+    public function testDispatchEmptyDeferredEventsArray()
+    {
+        $provider = new ClassicListenerProvider();
+        $dispatcher = new EventDispatcher($provider);
+
+        $this->expectExceptionMessage('There are no deferred events');
+
+        $dispatcher->dispatchDeferredEvents();
+    }
 }

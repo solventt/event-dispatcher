@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Slim\EventDispatcher\Tests;
+namespace Solventt\EventDispatcher\Tests;
 
 use LengthException;
 use PHPUnit\Framework\TestCase;
-use Slim\EventDispatcher\ListenerSignatureChecker;
-use Slim\EventDispatcher\Tests\Mocks\Events\FirstEvent;
-use Slim\EventDispatcher\Tests\Mocks\Listeners\ArrayCallable;
-use Slim\EventDispatcher\Tests\Mocks\Listeners\InvokableClass;
+use Solventt\EventDispatcher\ListenerSignatureChecker;
+use Solventt\EventDispatcher\Tests\Mocks\Events\FirstEvent;
+use Solventt\EventDispatcher\Tests\Mocks\Listeners\ArrayCallable;
+use Solventt\EventDispatcher\Tests\Mocks\Listeners\InvokableClass;
 
 class ListenerSignatureCheckerTest extends TestCase
 {
@@ -61,14 +61,14 @@ class ListenerSignatureCheckerTest extends TestCase
     {
         $closure = fn(string $param) => '';
 
-        self::expectErrorMessage('The listener parameter must has object or existent event class type');
+        self::expectErrorMessage('The listener parameter must have an object or existent event class type');
 
         (new ListenerSignatureChecker())->check($closure);
     }
 
     public function testWrongListenerReturnType()
     {
-        self::expectErrorMessage("The listener callback must have only 'void' return type");
+        self::expectErrorMessage("The listener callback must have only a 'void' return type");
 
         (new ListenerSignatureChecker())->check([new ArrayCallable(), 'wrongReturnType']);
     }
