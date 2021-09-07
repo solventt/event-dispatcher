@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-namespace Slim\EventDispatcher\Tests;
+namespace Solventt\EventDispatcher\Tests;
 
 use ArrayIterator;
 use DI\Container;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use ReflectionException;
-use Slim\EventDispatcher\Exceptions\ClassNotFoundException;
-use Slim\EventDispatcher\Exceptions\NotFoundListenersException;
-use Slim\EventDispatcher\Providers\ContainerListenerProvider;
-use Slim\EventDispatcher\Tests\Mocks\Events\FirstEvent;
-use Slim\EventDispatcher\Tests\Mocks\Events\SecondEvent;
-use Slim\EventDispatcher\Tests\Mocks\Listeners\ArrayCallable;
-use Slim\EventDispatcher\Tests\Mocks\Listeners\InvokableClass;
+use Solventt\EventDispatcher\Exceptions\ClassNotFoundException;
+use Solventt\EventDispatcher\Exceptions\NotFoundListenersException;
+use Solventt\EventDispatcher\Providers\ContainerListenerProvider;
+use Solventt\EventDispatcher\Tests\Mocks\Events\FirstEvent;
+use Solventt\EventDispatcher\Tests\Mocks\Events\SecondEvent;
+use Solventt\EventDispatcher\Tests\Mocks\Listeners\ArrayCallable;
+use Solventt\EventDispatcher\Tests\Mocks\Listeners\InvokableClass;
 use stdClass;
 
 class ContainerListenerProviderTest extends TestCase

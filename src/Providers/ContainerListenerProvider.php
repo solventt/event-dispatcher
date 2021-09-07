@@ -2,36 +2,33 @@
 
 declare(strict_types=1);
 
-namespace Slim\EventDispatcher\Providers;
+namespace Solventt\EventDispatcher\Providers;
 
 use Psr\Container\ContainerInterface;
 use Psr\EventDispatcher\ListenerProviderInterface;
 use ReflectionException;
-use Slim\EventDispatcher\Exceptions\ClassNotFoundException;
-use Slim\EventDispatcher\Exceptions\NotFoundListenersException;
-use Slim\EventDispatcher\ListenerSignatureChecker;
+use Solventt\EventDispatcher\Exceptions\ClassNotFoundException;
+use Solventt\EventDispatcher\Exceptions\NotFoundListenersException;
+use Solventt\EventDispatcher\ListenerSignatureChecker;
 use TypeError;
 
 class ContainerListenerProvider implements ListenerProviderInterface
 {
     private array $listeners;
 
-    private bool $whetherToCheck;
-
     private ListenerSignatureChecker $listenerChecker;
 
     /**
      * @param ContainerInterface $container
-     * @param string $definitionName Listeners definition name for DI container
-     * @param bool $whetherToCheck Indicates whether to check a listener signature
+     * @param string $definitionName listeners definition name for the DI container
+     * @param bool $whetherToCheck indicates whether to check a listener signature
      * @throws NotFoundListenersException|ReflectionException|ClassNotFoundException
      */
-    public function __construct(ContainerInterface $container,
+    public function __construct(private ContainerInterface $container,
                                 string $definitionName = 'eventsToListeners',
                                 bool $whetherToCheck = true)
     {
-        $this->listenerChecker = new ListenerSignatureChecker();
-        $this->whetherToCheck = $whetherToCheck;
+        $this->listenerChecker = new ListenerSignatureChecker($whetherToCheck);
 
         if (!$container->has($definitionName)) {
             throw new NotFoundListenersException('There are no listeners definition');
@@ -62,7 +59,7 @@ class ContainerListenerProvider implements ListenerProviderInterface
                 throw new ClassNotFoundException(sprintf('Class (%s) does not exist', $listener));
             }
 
-            $eventsClasses = $this->resolveListenerEvents($listener);
+            $eventsClasses = $this->listenerChecker->getEventClassName($listener);
 
             foreach ($eventsClasses as $eventClass) {
                 $this->listeners[$eventClass][] = $listener . 'recognizedLabel';
@@ -76,53 +73,32 @@ class ContainerListenerProvider implements ListenerProviderInterface
      */
     public function getListenersForEvent(object $event): iterable
     {
-        if (!isset($this->listeners[get_class($event)])) {
-            throw new NotFoundListenersException(sprintf('There are no listeners for %s', get_class($event)));
-        }
-
-        $listeners = $this->listeners[get_class($event)];
+        $listeners = $this->listeners[get_class($event)] ?? throw new NotFoundListenersException(sprintf('There are no listeners for %s', get_class($event)));
 
         return array_map(function (string $listener) {
 
-            if (preg_match('/recognizedLabel/', $listener, $matches, PREG_OFFSET_CAPTURE)) {
-                $position = $matches[0][1];
-                $listener = substr($listener, 0, $position);
+            if (str_contains($listener, 'recognizedLabel')) {
+                $position = strpos($listener, 'recognizedLabel');
 
-                return new $listener;
+                /** @var class-string $listener */
+                $listener = substr($listener, 0, $position ?: null);
+
+                return $this->container->get($listener);
             }
 
             if (is_callable($listener)) {
                 throw new TypeError('The listener must be an invokable class, not an usual function');
             }
 
-            if (class_exists($listener)) {
-                $listener = new $listener;
-            } else {
-                throw new ClassNotFoundException(sprintf('Class (%s) does not exist', $listener));
-            }
+            $listener = class_exists($listener) ? $this->container->get($listener) : throw new ClassNotFoundException(sprintf('Class (%s) does not exist', $listener));
 
             if (!is_callable($listener)) {
                 throw new TypeError(sprintf('The listener must be callable. For this, the class %s must implements the __invoke method', get_class($listener)));
             }
 
-            if ($this->whetherToCheck) {
-                $this->listenerChecker->check($listener);
-            }
+            $this->listenerChecker->check($listener);
 
             return $listener;
         }, $listeners);
-    }
-
-    private function resolveListenerEvents(string $listener): array
-    {
-        $reflection = new \ReflectionClass($listener);
-
-        try {
-            $method = $reflection->getMethod('__invoke');
-        } catch (ReflectionException $e) {
-            throw new ReflectionException(sprintf($e->getMessage() . ' in %s', $listener));
-        }
-
-        return $this->listenerChecker->getEventClassName($method);
     }
 }

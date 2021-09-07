@@ -2,27 +2,23 @@
 
 declare(strict_types=1);
 
-namespace Slim\EventDispatcher;
+namespace Solventt\EventDispatcher;
 
 use BadMethodCallException;
+use LogicException;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\EventDispatcher\ListenerProviderInterface;
 use Psr\EventDispatcher\StoppableEventInterface;
-use Slim\EventDispatcher\Exceptions\ClassNotFoundException;
-use Slim\EventDispatcher\Exceptions\NotFoundListenersException;
-use Slim\EventDispatcher\Providers\ReflectionListenerProvider;
+use Solventt\EventDispatcher\Exceptions\ClassNotFoundException;
+use Solventt\EventDispatcher\Exceptions\NotFoundListenersException;
+use Solventt\EventDispatcher\Providers\ReflectionListenerProvider;
 
 class EventDispatcher implements EventDispatcherInterface
 {
-    private ListenerProviderInterface $provider;
-
     /** Storage for deferred events */
     private array $deferredEvents;
 
-    public function __construct(ListenerProviderInterface $provider)
-    {
-        $this->provider = $provider;
-    }
+    public function __construct(private ListenerProviderInterface $provider) {}
 
     /**
      * @inheritDoc
@@ -40,8 +36,7 @@ class EventDispatcher implements EventDispatcherInterface
 
         foreach ($listeners as $listener) {
             if ($event instanceof StoppableEventInterface) {
-                if ($event->isPropagationStopped())
-                {
+                if ($event->isPropagationStopped()) {
                     return $immutableEventInstance;
                 }
             }
@@ -53,6 +48,10 @@ class EventDispatcher implements EventDispatcherInterface
 
     public function dispatchDeferredEvents(): void
     {
+        if (empty($this->deferredEvents)) {
+            throw new LogicException('There are no deferred events');
+        }
+
         foreach ($this->deferredEvents as $event) {
             $this->dispatch($event);
         }
@@ -74,7 +73,7 @@ class EventDispatcher implements EventDispatcherInterface
      * Binds a listener to an event
      * @param string $eventClass
      * @param callable $listener
-     * @param int $priority Listener execution priority
+     * @param int $priority listener execution priority
      * @throws BadMethodCallException|ClassNotFoundException
      */
     public function on(string $eventClass,
@@ -82,6 +81,8 @@ class EventDispatcher implements EventDispatcherInterface
                        int $priority = SubscribingInterface::DEFAULT_PRIORITY): void
     {
         $this->checkArguments($this->provider, $eventClass, __FUNCTION__);
+
+        /** @var SubscribingInterface $this->provider */
         $this->provider->on($eventClass, $listener, $priority);
     }
 
@@ -95,6 +96,7 @@ class EventDispatcher implements EventDispatcherInterface
     {
         $this->checkArguments($this->provider, $eventClass, __FUNCTION__);
 
+        /** @var SubscribingInterface $this->provider */
         $this->provider->off($eventClass, $listener);
     }
 
@@ -110,7 +112,7 @@ class EventDispatcher implements EventDispatcherInterface
     {
         $branch = in_array($methodName, ['on', 'off']) ? 1 : 2;
 
-        $badMethodCallMessage = sprintf("Provider (%s) does not support '%s' method", get_class($this->provider), $methodName);
+        $badMethodCallMessage = sprintf("(%s) does not support the '%s' method", get_class($this->provider), $methodName);
 
         if ($branch === 1) {
             if (!$provider instanceof SubscribingInterface) {
@@ -118,7 +120,7 @@ class EventDispatcher implements EventDispatcherInterface
             }
 
             if (!class_exists($eventClass)) {
-                throw new ClassNotFoundException(sprintf('Event (%s) does not exist', $eventClass));
+                throw new ClassNotFoundException(sprintf('(%s) does not exist', $eventClass));
             }
         } else {
             if (!$this->provider instanceof ReflectionListenerProvider) {
@@ -128,7 +130,7 @@ class EventDispatcher implements EventDispatcherInterface
     }
 
     /**
-     * Adds a listener. The method is supported only by ReflectionListenerProvider
+     * Adds a listener. This method is supported only by ReflectionListenerProvider
      * @param callable $listener
      * @param int $priority
      * @throws ClassNotFoundException
@@ -137,11 +139,12 @@ class EventDispatcher implements EventDispatcherInterface
     {
         $this->checkArguments($this->provider, null, __FUNCTION__);
 
+        /** @var ReflectionListenerProvider $this->provider */
         $this->provider->add($listener, $priority);
     }
 
     /**
-     * Removes a listener. The method is supported only by ReflectionListenerProvider
+     * Removes a listener. This method is supported only by ReflectionListenerProvider
      * @param callable $listener
      * @throws ClassNotFoundException
      */
@@ -149,6 +152,7 @@ class EventDispatcher implements EventDispatcherInterface
     {
         $this->checkArguments($this->provider, null, __FUNCTION__);
 
+        /** @var ReflectionListenerProvider $this->provider */
         $this->provider->remove($listener);
     }
 }

@@ -2,27 +2,29 @@
 
 declare(strict_types=1);
 
-namespace Slim\EventDispatcher\Providers;
+namespace Solventt\EventDispatcher\Providers;
 
+use ArrayAccess;
 use Psr\EventDispatcher\ListenerProviderInterface;
 use ReflectionException;
-use Slim\EventDispatcher\Exceptions\NotFoundListenersException;
-use Slim\EventDispatcher\ListenerSignatureChecker;
-use Slim\EventDispatcher\SubscribingInterface;
+use Solventt\EventDispatcher\Exceptions\NotFoundListenersException;
+use Solventt\EventDispatcher\ListenerSignatureChecker;
+use Solventt\EventDispatcher\SubscribingInterface;
 use TypeError;
 
 class ClassicListenerProvider implements ListenerProviderInterface, SubscribingInterface
 {
+    /** @var  ArrayAccess|array{class-string: array} */
     private iterable $listeners;
 
-    private bool $whetherToCheck;
+    private ListenerSignatureChecker $listenerChecker;
 
     /**
      * Incoming array values are filtered.
-     * If the listener execution priority is not specified
-     * the default priority value will be assigned to it.
+     * If a listener execution priority is not specified
+     * a default priority value will be assigned to it.
      *
-     * @param iterable $definition If not empty then must contain associative array(s) like:
+     * @param iterable $definition if not empty it must contain associative array(s):
      * [
      *    FirstEvent::class => [... listeners ...]
      *    SecondEvent::class => [... listeners ...]
@@ -33,7 +35,7 @@ class ClassicListenerProvider implements ListenerProviderInterface, SubscribingI
      * 1) new InvokableClass(),               // any callable
      * 2) [[new ArrayCallable(), 'test2'], 2] // or an array containing any callable and its execution priority
      *
-     * @param bool $whetherToCheck Indicates whether to check a listener signature
+     * @param bool $whetherToCheck indicates whether to check a listener signature
      */
     public function __construct(iterable $definition = [], bool $whetherToCheck = true)
     {
@@ -50,7 +52,7 @@ class ClassicListenerProvider implements ListenerProviderInterface, SubscribingI
                     continue;
                 }
 
-                if (is_array($listener) && is_callable($listener[0])) {
+                if (!empty($listener) && is_callable($listener[0])) {
                     if (!isset($listener[1]) || !is_integer($listener[1])) {
                         $listener[1] = SubscribingInterface::DEFAULT_PRIORITY;
                     }
@@ -61,7 +63,7 @@ class ClassicListenerProvider implements ListenerProviderInterface, SubscribingI
         }
 
         $this->listeners = $definition;
-        $this->whetherToCheck = $whetherToCheck;
+        $this->listenerChecker = new ListenerSignatureChecker($whetherToCheck);
     }
 
     /**
@@ -70,11 +72,7 @@ class ClassicListenerProvider implements ListenerProviderInterface, SubscribingI
      */
     public function getListenersForEvent(object $event): iterable
     {
-        if(!isset($this->listeners[get_class($event)])) {
-            throw new NotFoundListenersException(sprintf('There are no listeners for %s', get_class($event)));
-        }
-
-        $listeners = $this->listeners[get_class($event)];
+        $listeners = $this->listeners[get_class($event)] ?? throw new NotFoundListenersException(sprintf('There are no listeners for %s', get_class($event)));
 
         if (!is_iterable($listeners)) {
             throw new TypeError('Wrong listeners definition format. Iterable is needed');
@@ -82,12 +80,10 @@ class ClassicListenerProvider implements ListenerProviderInterface, SubscribingI
 
         $this->sortWithPriority($listeners);
 
-        /* @var array {callable, int} $listener*/
+        /** @var array {callable, int} $listener */
         return array_map(function (array $listener): callable {
 
-            if ($this->whetherToCheck) {
-                (new ListenerSignatureChecker())->check($listener[0]);
-            }
+            $this->listenerChecker->check($listener[0]);
 
             return $listener[0];
         }, $listeners);
@@ -95,11 +91,11 @@ class ClassicListenerProvider implements ListenerProviderInterface, SubscribingI
 
     /**
      * Descending sorting of listeners
-     * @param array $listeners
+     * @param array[] $listeners
      */
     private function sortWithPriority(array &$listeners): void
     {
-        usort($listeners, fn(array $a, array$b) => $a[1] == $b[1] ? 0 : ($a[1] > $b[1] ? -1 : 1));
+        usort($listeners, fn(array $a, array $b) => $a[1] == $b[1] ? 0 : ($a[1] > $b[1] ? -1 : 1));
     }
 
     /** @inheritDoc */
@@ -114,18 +110,18 @@ class ClassicListenerProvider implements ListenerProviderInterface, SubscribingI
      */
     public function off(string $eventClass, callable $listener): void
     {
-        if(!isset($this->listeners[$eventClass])) {
+        if (!isset($this->listeners[$eventClass])) {
             throw new NotFoundListenersException(sprintf('There are no listeners for %s', $eventClass));
         }
 
-        /* @var array {callback, int} $listener */
+        /** @var array {callable, int} $listener */
         $listeners = array_map(fn(array $listener): callable => $listener[0], $this->listeners[$eventClass]);
 
         foreach ($listeners as $index => $activeListener) {
 
-                if ($activeListener == $listener) {
+            if ($activeListener == $listener) {
                     unset($this->listeners[$eventClass][$index]);
-                }
+            }
         }
     }
 }

@@ -1,0 +1,71 @@
+<?xml version="1.0"?>
+<psalm errorLevel="2">
+    <projectFiles>
+        <directory name="src"/>
+    </projectFiles>
+
+    <issueHandlers>
+
+        <UndefinedMethod>
+            <errorLevel type="suppress">
+                <file name="src/ListenerSignatureChecker.php" />
+            </errorLevel>
+        </UndefinedMethod>
+
+        <RedundantPropertyInitializationCheck>
+            <errorLevel type="suppress">
+                <file name="src/Providers/ReflectionListenerProvider.php" />
+            </errorLevel>
+        </RedundantPropertyInitializationCheck>
+
+        <PossiblyNullArgument>
+            <errorLevel type="suppress">
+                <file name="src/EventDispatcher.php" />
+            </errorLevel>
+        </PossiblyNullArgument>
+
+        <PossiblyNullReference>
+            <errorLevel type="suppress">
+                <file name="src/ListenerSignatureChecker.php" />
+            </errorLevel>
+        </PossiblyNullReference>
+
+        <InvalidArrayAssignment>
+            <errorLevel type="suppress">
+                <file name="src/Providers/ReflectionListenerProvider.php" />
+            </errorLevel>
+        </InvalidArrayAssignment>
+
+        <MismatchingDocblockPropertyType>
+            <errorLevel type="suppress">
+                <file name="src/Providers/ClassicListenerProvider.php" />
+            </errorLevel>
+        </MismatchingDocblockPropertyType>
+
+        <InvalidPropertyAssignmentValue>
+            <errorLevel type="suppress">
+                <file name="src/Providers/ClassicListenerProvider.php" />
+            </errorLevel>
+        </InvalidPropertyAssignmentValue>
+
+        <InvalidArrayOffset>
+            <errorLevel type="suppress">
+                <file name="src/Providers/ClassicListenerProvider.php" />
+            </errorLevel>
+        </InvalidArrayOffset>
+
+        <InvalidArgument>
+            <errorLevel type="suppress">
+                <file name="src/Providers/ClassicListenerProvider.php" />
+            </errorLevel>
+        </InvalidArgument>
+
+        <PropertyNotSetInConstructor>
+            <errorLevel type="suppress">
+                <file name="src/EventDispatcher.php" />
+                <file name="src/Providers/ContainerListenerProvider.php" />
+            </errorLevel>
+        </PropertyNotSetInConstructor>
+
+    </issueHandlers>
+</psalm>

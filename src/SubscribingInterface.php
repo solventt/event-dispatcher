@@ -1,11 +1,11 @@
 <?php
 
-namespace Slim\EventDispatcher;
+namespace Solventt\EventDispatcher;
 
 interface SubscribingInterface
 {
-    /** Default value for listener execution priority */
-    const DEFAULT_PRIORITY = 0;
+    /** Default value for a listener execution priority */
+    public const DEFAULT_PRIORITY = 0;
 
     /**
      * Binds a listener to an event

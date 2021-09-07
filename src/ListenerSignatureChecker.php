@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Slim\EventDispatcher;
+namespace Solventt\EventDispatcher;
 
 use Closure;
 use LengthException;
@@ -11,40 +11,54 @@ use ReflectionFunction;
 use ReflectionFunctionAbstract;
 use ReflectionMethod;
 use ReflectionNamedType;
-use ReflectionType;
 use ReflectionUnionType;
 use TypeError;
 
 class ListenerSignatureChecker
 {
+    public function __construct(private bool $whetherToCheck = true){}
+
     /**
-     * @param callable $callable
+     * @param callable|class-string $listener
      * @return ReflectionFunctionAbstract
      * @throws ReflectionException
      */
-    public function createCallableReflection(callable $callable): ReflectionFunctionAbstract
+    public function createListenerReflection(callable|string $listener): ReflectionFunctionAbstract
     {
-        if ($callable instanceof Closure || is_string($callable)) {
-            return new ReflectionFunction($callable);
+        if (!is_callable($listener)) {
+            $reflection = new \ReflectionClass($listener);
+
+            try {
+                $method = $reflection->getMethod('__invoke');
+            } catch (ReflectionException $e) {
+                throw new ReflectionException(sprintf($e->getMessage() . ' in %s', $listener));
+            }
+            return $method;
         }
 
-        if (is_array($callable)) {
-            return new ReflectionMethod(...$callable);
+        if ($listener instanceof Closure || is_string($listener)) {
+            return new ReflectionFunction($listener);
         }
 
-        if (is_object($callable)) {
-            return new ReflectionMethod($callable, '__invoke');
+        if (is_array($listener)) {
+            return new ReflectionMethod(...$listener);
         }
+
+        return new ReflectionMethod($listener, '__invoke');
     }
 
     /**
-     * Checks a listener signature according to PSR-14 listener requirements
+     * Checks a listener signature according to the PSR-14 listener requirements
      * @param callable $callable
      * @throws ReflectionException|LengthException|TypeError
      */
     public function check(callable $callable): void
     {
-        $reflection = $this->createCallableReflection($callable);
+        if (!$this->whetherToCheck) {
+            return;
+        }
+
+        $reflection = $this->createListenerReflection($callable);
 
         $this->checkParametersQuantity($reflection);
         $this->checkParameterTypeHint($reflection, 'checkParamTypeIsClassOrObject');
@@ -93,7 +107,7 @@ class ListenerSignatureChecker
     private function checkParamTypeIsClassOrObject(ReflectionNamedType $paramType): void
     {
         if (!class_exists($paramType->getName()) && $paramType->getName() !== 'object') {
-            throw new TypeError('The listener parameter must has object or existent event class type');
+            throw new TypeError('The listener parameter must have an object or existent event class type');
         }
     }
 
@@ -104,7 +118,7 @@ class ListenerSignatureChecker
     private function checkParamTypeIsClass(ReflectionNamedType $paramType): void
     {
         if (!class_exists($paramType->getName())) {
-            throw new TypeError('The listener parameter must has only existent event class type');
+            throw new TypeError('The listener parameter must have a type of an existing event class');
         }
     }
 
@@ -116,18 +130,21 @@ class ListenerSignatureChecker
     {
         $returnType = $reflection->getReturnType();
 
-        if ($returnType instanceof ReflectionUnionType || $returnType->getName() !== 'void') {
-            throw new TypeError("The listener callback must have only 'void' return type");
+        if (!$returnType || $returnType instanceof ReflectionUnionType || $returnType->getName() !== 'void') {
+            throw new TypeError("The listener callback must have only a 'void' return type");
         }
     }
 
     /**
      * Gives a listener event (or events) class name
-     * @param ReflectionFunctionAbstract $reflection
+     * @param callable|class-string $listener
      * @return array
+     * @throws ReflectionException
      */
-    public function getEventClassName(ReflectionFunctionAbstract $reflection): array
+    public function getEventClassName(callable|string $listener): array
     {
+        $reflection = $this->createListenerReflection($listener);
+
         $this->checkParametersQuantity($reflection);
         $this->checkParameterTypeHint($reflection, 'checkParamTypeIsClass');
         $this->checkReturnType($reflection);
