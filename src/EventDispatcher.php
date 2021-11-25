@@ -81,9 +81,11 @@ class EventDispatcher implements EventDispatcherInterface
      * @param int $priority listener execution priority
      * @throws BadMethodCallException|ClassNotFoundException
      */
-    public function on(string $eventClass,
-                       callable $listener,
-                       int $priority = SubscribingInterface::DEFAULT_PRIORITY): void
+    public function on(
+        string $eventClass,
+        callable $listener,
+        int $priority = SubscribingInterface::DEFAULT_PRIORITY
+    ): void
     {
         $this->checkArguments($this->provider, $eventClass, __FUNCTION__);
 
@@ -111,9 +113,11 @@ class EventDispatcher implements EventDispatcherInterface
      * @param string $methodName
      * @throws BadMethodCallException|ClassNotFoundException
      */
-    private function checkArguments(ListenerProviderInterface $provider,
-                                    ?string $eventClass,
-                                    string $methodName): void
+    private function checkArguments(
+        ListenerProviderInterface $provider,
+        ?string $eventClass,
+        string $methodName
+    ): void
     {
         $branch = in_array($methodName, ['on', 'off']) ? 1 : 2;
 

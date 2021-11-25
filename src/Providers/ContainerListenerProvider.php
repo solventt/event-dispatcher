@@ -25,10 +25,11 @@ class ContainerListenerProvider implements ListenerProviderInterface
      * @param bool $whetherToCheck indicates whether to check a listener signature
      * @throws NotFoundListenersException|ReflectionException|ClassNotFoundException
      */
-    public function __construct(ContainerInterface $container,
-                                string $definitionName = 'eventsToListeners',
-                                bool $whetherToCheck = true)
-    {
+    public function __construct(
+        ContainerInterface $container,
+        string $definitionName = 'eventsToListeners',
+        bool $whetherToCheck = true
+    ) {
         $this->container = $container;
         $this->listenerChecker = new ListenerSignatureChecker($whetherToCheck);
 
@@ -43,7 +44,6 @@ class ContainerListenerProvider implements ListenerProviderInterface
         }
 
         foreach ($listeners as $eventClass => $listener) {
-
             if (is_array($listener) && !is_callable($listener)) {
                 if (!isset($this->listeners[$eventClass])) {
                     $this->listeners[$eventClass] = $listener;

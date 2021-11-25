@@ -40,9 +40,7 @@ class ClassicListenerProvider implements ListenerProviderInterface, SubscribingI
     public function __construct(iterable $definition = [], bool $whetherToCheck = true)
     {
         foreach ($definition as &$listenersArray) {
-
             foreach ($listenersArray as &$listener) {
-
                 if (!is_callable($listener) && !is_array($listener)) {
                     throw new TypeError('Wrong type of the listener');
                 }
@@ -122,7 +120,6 @@ class ClassicListenerProvider implements ListenerProviderInterface, SubscribingI
         $listeners = array_map(fn(array $listener): callable => $listener[0], $this->listeners[$eventClass]);
 
         foreach ($listeners as $index => $activeListener) {
-
             if ($activeListener == $listener) {
                     unset($this->listeners[$eventClass][$index]);
             }
