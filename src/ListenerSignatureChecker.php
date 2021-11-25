@@ -16,7 +16,7 @@ use TypeError;
 
 class ListenerSignatureChecker
 {
-    public function __construct(private bool $whetherToCheck = true){}
+    public function __construct(private bool $whetherToCheck = true) {}
 
     /**
      * @param callable|class-string $listener

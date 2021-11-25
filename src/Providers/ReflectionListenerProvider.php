@@ -88,9 +88,7 @@ class ReflectionListenerProvider implements ListenerProviderInterface
     {
         $existence = false;
 
-
         foreach ($this->listeners as &$listenersArray) {
-
             foreach ($listenersArray as $index => $activeListener) {
                 if ($activeListener[0] == $listener) {
                     unset($listenersArray[$index]);
