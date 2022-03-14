@@ -6,5 +6,4 @@ namespace Solventt\EventDispatcher\Exceptions;
 
 class NotFoundListenersException extends \Exception
 {
-
 }
