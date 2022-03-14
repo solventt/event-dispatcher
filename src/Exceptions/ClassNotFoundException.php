@@ -6,5 +6,4 @@ namespace Solventt\EventDispatcher\Exceptions;
 
 class ClassNotFoundException extends \Exception
 {
-
 }
