@@ -116,6 +116,7 @@ class ClassicListenerProvider implements ListenerProviderInterface, SubscribingI
         $listeners = array_map(fn(array $listener): callable => $listener[0], $this->listeners[$eventClass]);
 
         foreach ($listeners as $index => $activeListener) {
+            /** @psalm-suppress TypeDoesNotContainType $activeListener */
             if ($activeListener == $listener) {
                     unset($this->listeners[$eventClass][$index]);
             }
