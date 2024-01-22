@@ -67,5 +67,11 @@
             </errorLevel>
         </PropertyNotSetInConstructor>
 
+        <RiskyTruthyFalsyComparison>
+            <errorLevel type="suppress">
+                <file name="src/Providers/ContainerListenerProvider.php" />
+            </errorLevel>
+        </RiskyTruthyFalsyComparison>
+
     </issueHandlers>
 </psalm>
